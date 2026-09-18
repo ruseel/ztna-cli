@@ -50,7 +50,7 @@ end performOperation
 -- Resolve labels from GlobalProtect's Localizable.strings for the user's
 -- preferred language rather than depending on English AX names.
 on globalProtectString(key)
-    return localized string key from table "Localizable" in bundle "com.paloaltonetworks.GlobalProtect.client"
+    return localized string key from table "Localizable" in bundle (path to application "GlobalProtect")
 end globalProtectString
 
 on finishOperation(operation, currentStatus)
