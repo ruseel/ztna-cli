@@ -1,6 +1,6 @@
 [package]
 name = "ztna-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Control GlobalProtect on macOS via its menu-bar UI"
 license = "MIT"
