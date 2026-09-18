@@ -24,7 +24,7 @@ jobs:
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -54,7 +54,7 @@ jobs:
           mkdir -p dist
           tar -czf "dist/ztna-cli-${TAG}-${TARGET}.tar.gz" \
             -C "target/${TARGET}/release" ztna-cli
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ztna-cli-${{ matrix.target }}
           path: dist/*.tar.gz
@@ -66,7 +66,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: ztna-cli-*
           path: dist
