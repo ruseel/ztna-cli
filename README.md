@@ -106,10 +106,11 @@ Automation permission for System Events is separate and is not checked by
   required only when building from source.
 - Allow your terminal under System Settings → Privacy & Security → Accessibility,
   and allow Automation access to System Events when prompted.
-- Resolves Connect/Disconnect and connection-state labels from GlobalProtect's
-  own `Localizable.strings`, so installed app localizations (including Korean)
-  are supported. GlobalProtect UI-structure changes may still need updates to
-  `src/globalprotect.applescript`.
+- Includes Connect/Disconnect and connection-state labels from GlobalProtect
+  6.3.3's bundled `Localizable.strings`, supporting its English, German,
+  Simplified/Traditional Chinese, Japanese, Spanish, Korean, and French UI
+  labels without a runtime resource lookup. GlobalProtect UI-structure changes
+  or label changes may still need updates to `src/globalprotect.applescript`.
 - No sudo, credentials, route changes, or external scripts are required at runtime.
   The AppleScript is embedded in the binary and executed in-process using macOS
   Foundation's `NSAppleScript` through `objc2` bindings. No shell or `osascript`

@@ -95,6 +95,38 @@ mod tests {
         }
     }
 
+    // Compile only: never execute UI automation or change VPN state in tests.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn embedded_applescript_compiles() {
+        use std::{
+            io::Write,
+            process::{Command, Stdio},
+        };
+
+        for operation in ["connect", "disconnect", "status"] {
+            let mut child = Command::new("/usr/bin/osacompile")
+                .args(["-o", "/dev/null"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("start AppleScript compiler");
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(source(operation).unwrap().as_bytes())
+                .expect("write embedded AppleScript");
+            let output = child.wait_with_output().expect("wait for compiler");
+            assert!(
+                output.status.success(),
+                "{operation}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+    }
+
     #[test]
     fn rejects_source_injection() {
         assert!(source("status\")\ndo shell script \"anything").is_err());

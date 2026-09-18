@@ -1,3 +1,24 @@
+-- Labels copied from the installed GlobalProtect 6.3.3 Localizable.strings
+-- bundles. Keeping them in this embedded script avoids any runtime bundle lookup.
+property connectLabels : {"Connect", "Verbinden", "连接", "接続", "Conectar", "연결", "連線", "Connecter"}
+property disconnectLabels : {"Disconnect", "Trennen", "中断连接", "切断", "Desconectar", "연결 해제", "中斷連線", "Déconnecter"}
+property connectedLabels : {"Connected", "Verbunden", "已连接", "接続済み", "Conectado", "연결됨", "已連線", "Connecté"}
+property disconnectedLabels : {"Not Connected", "Nicht verbunden", "没有连接", "未接続", "No conectado", "연결되지 않음", "沒有連線", "Non connecté"}
+property connectingLabels : {"Connecting", "Connecting...", "Verbinden", "Verbinde...", "连接中", "正在连接...", "接続中", "接続中...", "Conectando", "Conectando...", "연결 중", "연결 중...", "連線中", "正在連線...", "Connexion", "Connexion en cours..."}
+property disconnectingLabels : {"Disconnecting...", "Verbindung wird getrennt", "正在断开连接...", "切断中...", "Desconectando...", "연결 해제 중...", "正在中斷連線...", "Déconnexion..."}
+
+on enabledButtonName(panel, labelList)
+    tell application "System Events"
+        repeat with labelText in labelList
+            set buttonName to contents of labelText
+            if exists button buttonName of panel then
+                if enabled of button buttonName of panel then return buttonName
+            end if
+        end repeat
+    end tell
+    return missing value
+end enabledButtonName
+
 on performOperation(operation)
     tell application "System Events"
         if not (exists process "GlobalProtect") then
@@ -10,28 +31,28 @@ on performOperation(operation)
             if operation is "status" then return currentStatus
 
             if operation is "connect" then
-                set targetStatus to my globalProtectString("Connected")
-                set buttonName to my globalProtectString("Connect")
+                set targetStatuses to connectedLabels
+                set buttonNames to connectLabels
+                set transitionStatuses to connectingLabels
             else if operation is "disconnect" then
-                set targetStatus to my globalProtectString("Not Connected")
-                set buttonName to my globalProtectString("Disconnect")
+                set targetStatuses to disconnectedLabels
+                set buttonNames to disconnectLabels
+                set transitionStatuses to disconnectingLabels
             else
                 error "Unsupported operation"
             end if
-            if currentStatus is targetStatus then return my finishOperation(operation, currentStatus)
+            if currentStatus is in targetStatuses then return my finishOperation(operation, currentStatus)
 
             -- If a transition is already in progress, wait rather than click again.
-            set transitionInProgress to false
-            if operation is "connect" and (currentStatus is my globalProtectString("Connecting") or currentStatus is my globalProtectString("Connecting...")) then set transitionInProgress to true
-            if operation is "disconnect" and currentStatus is my globalProtectString("Disconnecting...") then set transitionInProgress to true
+            set transitionInProgress to (currentStatus is in transitionStatuses)
             if not transitionInProgress then
                 if not (exists first window) then click menu bar item 1 of menu bar 2
                 repeat
-                    if help of menu bar item 1 of menu bar 2 is targetStatus then return my finishOperation(operation, targetStatus)
+                    set currentStatus to help of menu bar item 1 of menu bar 2
+                    if currentStatus is in targetStatuses then return my finishOperation(operation, currentStatus)
                     if exists first window then
-                        if exists button buttonName of first window then
-                            if enabled of button buttonName of first window then exit repeat
-                        end if
+                        set buttonName to my enabledButtonName(first window, buttonNames)
+                        if buttonName is not missing value then exit repeat
                     end if
                     delay 0.2
                 end repeat
@@ -39,19 +60,15 @@ on performOperation(operation)
             end if
 
             -- Rust enforces an overall deadline, including UI and authentication waits.
-            repeat until help of menu bar item 1 of menu bar 2 is targetStatus
+            repeat
+                set currentStatus to help of menu bar item 1 of menu bar 2
+                if currentStatus is in targetStatuses then exit repeat
                 delay 0.5
             end repeat
-            return my finishOperation(operation, targetStatus)
+            return my finishOperation(operation, currentStatus)
         end tell
     end tell
 end performOperation
-
--- Resolve labels from GlobalProtect's Localizable.strings for the user's
--- preferred language rather than depending on English AX names.
-on globalProtectString(key)
-    return localized string key from table "Localizable" in bundle (path to application "GlobalProtect")
-end globalProtectString
 
 on finishOperation(operation, currentStatus)
     if operation is "disconnect" then
