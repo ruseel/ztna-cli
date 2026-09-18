@@ -1,0 +1,10 @@
+[package]
+name = "ztna-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Control GlobalProtect on macOS via its menu-bar UI"
+license = "MIT"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSAppleScript", "NSAppleEventDescriptor", "NSDictionary", "NSString"] }
