@@ -12,11 +12,37 @@ Install the latest release from `ruseel/ztna-cli`:
 
 ```sh
 mise use -g github:ruseel/ztna-cli@latest
-mise exec -- ztna-cli --version
+```
+
+Requires [mise](https://mise.jdx.dev/getting-started.html). To run `ztna-cli`
+directly, activate mise in your shell. For zsh (the macOS default), add this line
+to `~/.zshrc` once:
+
+```zsh
+eval "$(mise activate zsh)"
+```
+
+Reload your shell configuration, then verify:
+
+```zsh
+source ~/.zshrc
+ztna-cli --version
 ztna-cli doctor
 ```
 
-Requires [mise](https://mise.jdx.dev/getting-started.html) activated in your shell.
+`mise use -g` selects the global version, but does not install into
+`~/.local/bin`. Shell activation adds the selected version's binary directory
+under `~/.local/share/mise/installs/` to `PATH`. If you see
+`zsh: command not found: ztna-cli`, check that mise is activated as shown above.
+
+Without shell activation, run commands through mise instead:
+
+```sh
+mise exec -- ztna-cli --version
+mise exec -- ztna-cli doctor
+mise exec -- ztna-cli status
+```
+
 Omit `-g` to record the tool in the current project's `mise.toml` instead.
 Prebuilt binaries are available for macOS Apple Silicon and Intel; Rust is not
 needed. Linux and Windows are not supported.
@@ -91,6 +117,13 @@ Automation permission for System Events is separate and is not checked by
 - Disconnect dismisses the GlobalProtect menu-bar panel by toggling its icon
   when the panel is open, including when already disconnected. It never sends
   a global Cmd+W, avoiding accidentally closing another app's window.
+
+## Agent skill
+
+[`skills/ztna-cli/SKILL.md`](skills/ztna-cli/SKILL.md) provides agent instructions
+for mise installation, shell activation, permission diagnostics, and safe VPN
+connect/disconnect workflows. Copy or symlink the `skills/ztna-cli` directory
+into your agent's skills directory. In Pi, invoke it with `/skill:ztna-cli`.
 
 ## Development
 
