@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          components: rustfmt, clippy
+      - name: Check release version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["packages"][0]["version"])')
+          test "$TAG" = "v$version"
+      - name: Check and test
+        run: |
+          cargo fmt --check
+          cargo test --locked --target ${{ matrix.target }}
+          cargo clippy --locked --target ${{ matrix.target }} -- -D warnings
+      - name: Build and smoke test
+        run: |
+          cargo build --release --locked --target ${{ matrix.target }}
+          target/${{ matrix.target }}/release/ztna-cli --version
+          target/${{ matrix.target }}/release/ztna-cli --help
+      - name: Package
+        env:
+          TAG: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          mkdir -p dist
+          tar -czf "dist/ztna-cli-${TAG}-${TARGET}.tar.gz" \
+            -C "target/${TARGET}/release" ztna-cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ztna-cli-${{ matrix.target }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ztna-cli-*
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          sha256sum *.tar.gz > SHA256SUMS
+          gh release create "$TAG" --verify-tag --draft --title "$TAG" --generate-notes
+          gh release upload "$TAG" ./*.tar.gz SHA256SUMS
+          gh release edit "$TAG" --draft=false --latest
