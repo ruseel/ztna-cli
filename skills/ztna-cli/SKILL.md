@@ -124,7 +124,8 @@ timeout, check status before retrying or attempting restoration.
   timeout, 2 invalid arguments.
 - Report the executable version, operation result, and separately verified final
   status. Do not claim network reachability based solely on a UI status check.
-- If the UI labels are not English, or GlobalProtect's menu-bar structure has
+- The CLI resolves its button and state labels from GlobalProtect's installed
+  localization resources, including Korean. If the menu-bar structure has
   changed, report that limitation rather than repeatedly attempting UI control.
 - This skill does not authenticate Azure CLI or configure tenant certificates;
   handle those separately if requested.

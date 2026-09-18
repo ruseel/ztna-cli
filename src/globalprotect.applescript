@@ -10,11 +10,11 @@ on performOperation(operation)
             if operation is "status" then return currentStatus
 
             if operation is "connect" then
-                set targetStatus to "Connected"
-                set buttonName to "Connect"
+                set targetStatus to my globalProtectString("Connected")
+                set buttonName to my globalProtectString("Connect")
             else if operation is "disconnect" then
-                set targetStatus to "Not Connected"
-                set buttonName to "Disconnect"
+                set targetStatus to my globalProtectString("Not Connected")
+                set buttonName to my globalProtectString("Disconnect")
             else
                 error "Unsupported operation"
             end if
@@ -22,8 +22,8 @@ on performOperation(operation)
 
             -- If a transition is already in progress, wait rather than click again.
             set transitionInProgress to false
-            if operation is "connect" and currentStatus is "Connecting" then set transitionInProgress to true
-            if operation is "disconnect" and currentStatus is "Disconnecting" then set transitionInProgress to true
+            if operation is "connect" and (currentStatus is my globalProtectString("Connecting") or currentStatus is my globalProtectString("Connecting...")) then set transitionInProgress to true
+            if operation is "disconnect" and currentStatus is my globalProtectString("Disconnecting...") then set transitionInProgress to true
             if not transitionInProgress then
                 if not (exists first window) then click menu bar item 1 of menu bar 2
                 repeat
@@ -46,6 +46,12 @@ on performOperation(operation)
         end tell
     end tell
 end performOperation
+
+-- Resolve labels from GlobalProtect's Localizable.strings for the user's
+-- preferred language rather than depending on English AX names.
+on globalProtectString(key)
+    return localized string key from table "Localizable" in bundle "com.paloaltonetworks.GlobalProtect.client"
+end globalProtectString
 
 on finishOperation(operation, currentStatus)
     if operation is "disconnect" then

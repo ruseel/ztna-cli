@@ -106,9 +106,10 @@ Automation permission for System Events is separate and is not checked by
   required only when building from source.
 - Allow your terminal under System Settings → Privacy & Security → Accessibility,
   and allow Automation access to System Events when prompted.
-- Uses the same English UI labels and menu-bar accessibility structure as the
-  original scripts. Other languages or GlobalProtect UI changes may need updates
-  to `src/globalprotect.applescript`.
+- Resolves Connect/Disconnect and connection-state labels from GlobalProtect's
+  own `Localizable.strings`, so installed app localizations (including Korean)
+  are supported. GlobalProtect UI-structure changes may still need updates to
+  `src/globalprotect.applescript`.
 - No sudo, credentials, route changes, or external scripts are required at runtime.
   The AppleScript is embedded in the binary and executed in-process using macOS
   Foundation's `NSAppleScript` through `objc2` bindings. No shell or `osascript`
